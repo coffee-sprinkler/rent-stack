@@ -1,0 +1,211 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  admin
+  manager
+  tenant
+}
+
+enum PlanName {
+  basic
+  pro
+  enterprise
+}
+
+enum SubscriptionStatus {
+  active
+  trial
+  cancelled
+}
+
+enum PropertyType {
+  apartment
+  house
+  condo
+}
+
+enum UnitStatus {
+  available
+  occupied
+  maintenance
+}
+
+enum LeaseStatus {
+  active
+  ended
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  late
+}
+
+enum MaintenancePriority {
+  low
+  medium
+  high
+}
+
+enum MaintenanceStatus {
+  open
+  in_progress
+  resolved
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model Organization {
+  id            String        @id @default(cuid())
+  name          String
+  plan_id       String?
+
+  users         User[]
+  subscriptions Subscription[]
+  properties    Property[]
+  tenants       Tenant[]
+
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+}
+
+model User {
+  id              String       @id @default(cuid())
+  name            String
+  email           String       @unique
+  password        String
+  role            Role         @default(tenant)
+
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id])
+
+  assigned_requests MaintenanceRequest[] @relation("AssignedTo")
+
+  created_at      DateTime     @default(now())
+  updated_at      DateTime     @updatedAt
+}
+
+model Subscription {
+  id                  String             @id @default(cuid())
+  organization_id     String
+  organization        Organization       @relation(fields: [organization_id], references: [id])
+
+  plan_name           PlanName
+  status              SubscriptionStatus @default(trial)
+  start_date          DateTime
+  end_date            DateTime?
+  payment_provider_id String?
+}
+
+model Property {
+  id              String       @id @default(cuid())
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id])
+
+  name            String
+  address         String
+  property_type   PropertyType
+
+  units           Unit[]
+  expenses        Expense[]
+
+  created_at      DateTime     @default(now())
+}
+
+model Unit {
+  id          String     @id @default(cuid())
+  property_id String
+  property    Property   @relation(fields: [property_id], references: [id])
+
+  unit_number String
+  floor       Int?
+  bedrooms    Int
+  bathrooms   Int
+  rent_amount Decimal    @db.Decimal(10, 2)
+  status      UnitStatus @default(available)
+
+  leases               Lease[]
+  maintenance_requests MaintenanceRequest[]
+}
+
+model Tenant {
+  id              String       @id @default(cuid())
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id])
+
+  first_name        String
+  last_name         String
+  email             String
+  phone             String?
+  emergency_contact String?
+
+  leases               Lease[]
+  maintenance_requests MaintenanceRequest[]
+}
+
+model Lease {
+  id            String      @id @default(cuid())
+  tenant_id     String
+  tenant        Tenant      @relation(fields: [tenant_id], references: [id])
+
+  unit_id       String
+  unit          Unit        @relation(fields: [unit_id], references: [id])
+
+  start_date    DateTime
+  end_date      DateTime
+  monthly_rent  Decimal     @db.Decimal(10, 2)
+  deposit_amount Decimal    @db.Decimal(10, 2)
+  status        LeaseStatus @default(active)
+
+  payments      Payment[]
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  lease_id       String
+  lease          Lease         @relation(fields: [lease_id], references: [id])
+
+  amount         Decimal       @db.Decimal(10, 2)
+  due_date       DateTime
+  paid_date      DateTime?
+  status         PaymentStatus @default(pending)
+  payment_method String?
+}
+
+model MaintenanceRequest {
+  id          String              @id @default(cuid())
+  unit_id     String
+  unit        Unit                @relation(fields: [unit_id], references: [id])
+
+  tenant_id   String
+  tenant      Tenant              @relation(fields: [tenant_id], references: [id])
+
+  title       String
+  description String
+  priority    MaintenancePriority @default(low)
+  status      MaintenanceStatus   @default(open)
+
+  assigned_to String?
+  assignee    User?               @relation("AssignedTo", fields: [assigned_to], references: [id])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  property_id String
+  property    Property @relation(fields: [property_id], references: [id])
+
+  category    String
+  amount      Decimal  @db.Decimal(10, 2)
+  description String?
+  date        DateTime
+}
