@@ -86,13 +86,38 @@ model User {
   password        String
   role            Role         @default(tenant)
 
-  organization_id String
-  organization    Organization @relation(fields: [organization_id], references: [id])
+  // Renter profile fields (optional)
+  avatar_url      String?
+  phone           String?
+
+  // Rental preferences
+  pref_min_budget  Decimal?    @db.Decimal(10, 2)
+  pref_max_budget  Decimal?    @db.Decimal(10, 2)
+  pref_location    String?
+  pref_bedrooms    Int?
+  pref_property_type PropertyType?
+
+  organization_id String?
+  organization    Organization? @relation(fields: [organization_id], references: [id])
 
   assigned_requests MaintenanceRequest[] @relation("AssignedTo")
+  saved_units       SavedUnit[]
 
   created_at      DateTime     @default(now())
   updated_at      DateTime     @updatedAt
+}
+
+model SavedUnit {
+  id      String @id @default(cuid())
+  user_id String
+  unit_id String
+
+  user    User   @relation(fields: [user_id], references: [id])
+  unit    Unit   @relation(fields: [unit_id], references: [id])
+
+  saved_at DateTime @default(now())
+
+  @@unique([user_id, unit_id])
 }
 
 model Subscription {
@@ -114,6 +139,7 @@ model Property {
 
   name            String
   address         String
+  city            String?
   property_type   PropertyType
 
   units           Unit[]
@@ -134,8 +160,22 @@ model Unit {
   rent_amount Decimal    @db.Decimal(10, 2)
   status      UnitStatus @default(available)
 
+  images               UnitImage[]
   leases               Lease[]
   maintenance_requests MaintenanceRequest[]
+  saved_by             SavedUnit[]
+}
+
+model UnitImage {
+  id      String @id @default(cuid())
+  unit_id String
+  unit    Unit   @relation(fields: [unit_id], references: [id])
+
+  url     String
+  caption String?
+  order   Int    @default(0)
+
+  created_at DateTime @default(now())
 }
 
 model Tenant {

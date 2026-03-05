@@ -1,7 +1,11 @@
+// app/api/auth/logout/route.ts
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { clearSession } from '@/lib/session';
 
-export async function POST() {
-  await clearSession();
-  return NextResponse.json({ success: true });
+export async function GET() {
+  const cookieStore = await cookies();
+  cookieStore.delete('token');
+  return NextResponse.redirect(
+    new URL('/', process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
+  );
 }
