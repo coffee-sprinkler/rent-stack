@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RentStack
+
+A multi-tenant property management SaaS built with Next.js 16, Prisma 7, and PostgreSQL.
+
+## Tech Stack
+
+- **Framework** — Next.js 16 (App Router, Turbopack)
+- **Database** — PostgreSQL via Prisma 7
+- **Auth** — JWT (bcryptjs + jsonwebtoken), HTTP-only cookies
+- **Styling** — Tailwind CSS + shadcn/ui
+- **Payments** — Stripe (webhooks ready)
+- **Email** — Email service (pluggable)
+- **Storage** — Storage service (pluggable)
+
+## Features
+
+- Multi-tenant architecture — each landlord/company gets their own organization
+- Role-based access control — `admin`, `manager`, `tenant`
+- Property & unit management
+- Tenant and lease tracking
+- Rent payment tracking
+- Maintenance request workflow
+- Expense tracking per property
+- Subscription/billing logic per organization
+
+## Project Structure
+
+```
+app/
+├── (marketing)/        → Public pages (/, /pricing)
+├── (auth)/             → Login & Register
+├── (dashboard)/        → Protected landlord dashboard
+│   ├── dashboard/      → Overview
+│   ├── properties/
+│   ├── tenants/
+│   ├── leases/
+│   ├── payments/
+│   └── maintenance/
+└── api/                → API routes (auth, properties, tenants, leases, payments, webhooks)
+
+features/               → Feature modules (components + server actions + types)
+lib/                    → auth.ts, session.ts, permission.ts
+db/                     → Prisma client singleton
+proxy/                  → Auth & role middleware
+services/               → Stripe, email, storage
+prisma/                 → schema.prisma + migrations
+```
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Set up environment variables
+
+```bash
+cp .env.example .env
+```
+
+Fill in your `.env`:
+
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/rental_saas"
+JWT_SECRET="your-super-secret-key"
+JWT_EXPIRES_IN="7d"
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+```
+
+### 3. Set up the database
+
+```bash
+npx prisma migrate dev --name init
+npx prisma generate
+```
+
+### 4. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database Schema
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+10 models: `Organization`, `User`, `Subscription`, `Property`, `Unit`, `Tenant`, `Lease`, `Payment`, `MaintenanceRequest`, `Expense`.
 
-## Learn More
+To explore the database visually:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx prisma studio
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Auth Flow
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+POST /api/auth/register  →  create org + admin user  →  set JWT cookie
+POST /api/auth/login     →  verify credentials        →  set JWT cookie
+POST /api/auth/logout    →  clear cookie
+GET  /dashboard/*        →  proxy validates JWT        →  forwards x-user-id, x-user-role
+GET  /dashboard/maintenance → role check (admin only)
+```
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The easiest way to deploy is via [Vercel](https://vercel.com). Make sure to set all environment variables in your project settings.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+vercel deploy
+```

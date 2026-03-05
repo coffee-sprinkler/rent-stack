@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authMiddleware, roleMiddleware } from './middleware/index';
+import { authMiddleware, roleMiddleware } from './proxy/index';
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   if (pathname.startsWith('/dashboard')) {
