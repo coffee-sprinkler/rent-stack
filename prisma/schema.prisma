@@ -66,39 +66,64 @@ enum MaintenanceStatus {
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model Organization {
-  id            String        @id @default(cuid())
-  name          String
-  plan_id       String?
+  id      String  @id @default(cuid())
+  name    String
+  plan_id String?
 
   users         User[]
   subscriptions Subscription[]
   properties    Property[]
   tenants       Tenant[]
 
-  created_at    DateTime      @default(now())
-  updated_at    DateTime      @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model User {
-  id              String       @id @default(cuid())
-  name            String
-  email           String       @unique
-  password        String
-  role            Role         @default(tenant)
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  password String
+  role     Role   @default(tenant)
 
-  organization_id String
-  organization    Organization @relation(fields: [organization_id], references: [id])
+  // Renter profile fields (optional)
+  avatar_url String?
+  phone      String?
+
+  // Rental preferences
+  pref_min_budget    Decimal?      @db.Decimal(10, 2)
+  pref_max_budget    Decimal?      @db.Decimal(10, 2)
+  pref_location      String?
+  pref_bedrooms      Int?
+  pref_property_type PropertyType?
+
+  organization_id String?
+  organization    Organization? @relation(fields: [organization_id], references: [id])
 
   assigned_requests MaintenanceRequest[] @relation("AssignedTo")
+  saved_units       SavedUnit[]
 
-  created_at      DateTime     @default(now())
-  updated_at      DateTime     @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model SavedUnit {
+  id      String @id @default(cuid())
+  user_id String
+  unit_id String
+
+  user User @relation(fields: [user_id], references: [id])
+  unit Unit @relation(fields: [unit_id], references: [id])
+
+  saved_at DateTime @default(now())
+
+  @@unique([user_id, unit_id])
 }
 
 model Subscription {
-  id                  String             @id @default(cuid())
-  organization_id     String
-  organization        Organization       @relation(fields: [organization_id], references: [id])
+  id              String       @id @default(cuid())
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id])
 
   plan_name           PlanName
   status              SubscriptionStatus @default(trial)
@@ -109,23 +134,26 @@ model Subscription {
 
 model Property {
   id              String       @id @default(cuid())
-  organization_id String
-  organization    Organization @relation(fields: [organization_id], references: [id])
+  organization_id String?
+  organization    Organization? @relation(fields: [organization_id], references: [id])
 
-  name            String
-  address         String
-  property_type   PropertyType
+  name          String
+  province        String?
+  city            String?
+  barangay        String?
+  street          String?
+  property_type PropertyType
 
-  units           Unit[]
-  expenses        Expense[]
+  units    Unit[]
+  expenses Expense[]
 
-  created_at      DateTime     @default(now())
+  created_at DateTime @default(now())
 }
 
 model Unit {
-  id          String     @id @default(cuid())
+  id          String   @id @default(cuid())
   property_id String
-  property    Property   @relation(fields: [property_id], references: [id])
+  property    Property @relation(fields: [property_id], references: [id])
 
   unit_number String
   floor       Int?
@@ -134,8 +162,22 @@ model Unit {
   rent_amount Decimal    @db.Decimal(10, 2)
   status      UnitStatus @default(available)
 
+  images               UnitImage[]
   leases               Lease[]
   maintenance_requests MaintenanceRequest[]
+  saved_by             SavedUnit[]
+}
+
+model UnitImage {
+  id      String @id @default(cuid())
+  unit_id String
+  unit    Unit   @relation(fields: [unit_id], references: [id])
+
+  url     String
+  caption String?
+  order   Int     @default(0)
+
+  created_at DateTime @default(now())
 }
 
 model Tenant {
@@ -154,26 +196,26 @@ model Tenant {
 }
 
 model Lease {
-  id            String      @id @default(cuid())
-  tenant_id     String
-  tenant        Tenant      @relation(fields: [tenant_id], references: [id])
+  id        String @id @default(cuid())
+  tenant_id String
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
 
-  unit_id       String
-  unit          Unit        @relation(fields: [unit_id], references: [id])
+  unit_id String
+  unit    Unit   @relation(fields: [unit_id], references: [id])
 
-  start_date    DateTime
-  end_date      DateTime
-  monthly_rent  Decimal     @db.Decimal(10, 2)
-  deposit_amount Decimal    @db.Decimal(10, 2)
-  status        LeaseStatus @default(active)
+  start_date     DateTime
+  end_date       DateTime
+  monthly_rent   Decimal     @db.Decimal(10, 2)
+  deposit_amount Decimal     @db.Decimal(10, 2)
+  status         LeaseStatus @default(active)
 
-  payments      Payment[]
+  payments Payment[]
 }
 
 model Payment {
-  id             String        @id @default(cuid())
-  lease_id       String
-  lease          Lease         @relation(fields: [lease_id], references: [id])
+  id       String @id @default(cuid())
+  lease_id String
+  lease    Lease  @relation(fields: [lease_id], references: [id])
 
   amount         Decimal       @db.Decimal(10, 2)
   due_date       DateTime
@@ -183,12 +225,12 @@ model Payment {
 }
 
 model MaintenanceRequest {
-  id          String              @id @default(cuid())
-  unit_id     String
-  unit        Unit                @relation(fields: [unit_id], references: [id])
+  id      String @id @default(cuid())
+  unit_id String
+  unit    Unit   @relation(fields: [unit_id], references: [id])
 
-  tenant_id   String
-  tenant      Tenant              @relation(fields: [tenant_id], references: [id])
+  tenant_id String
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
 
   title       String
   description String
@@ -196,7 +238,7 @@ model MaintenanceRequest {
   status      MaintenanceStatus   @default(open)
 
   assigned_to String?
-  assignee    User?               @relation("AssignedTo", fields: [assigned_to], references: [id])
+  assignee    User?   @relation("AssignedTo", fields: [assigned_to], references: [id])
 }
 
 model Expense {

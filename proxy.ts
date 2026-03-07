@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authMiddleware, roleMiddleware } from './proxy/index';
+import { authMiddleware, roleMiddleware } from './lib/proxy/index';
 
 export function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
