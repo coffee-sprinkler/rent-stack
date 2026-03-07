@@ -204,21 +204,12 @@ export default function DashboardClient({
               {profileOpen && (
                 <div className='absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden'>
                   <Link
-                    href='/dashboard/profile'
+                    href='/portal/profile'
                     onClick={() => setProfileOpen(false)}
                     className='flex items-center gap-2 px-4 py-3 text-sm hover:bg-zinc-800 transition'
                   >
                     <span>👤</span> My Profile
                   </Link>
-                  {!hasListings && (
-                    <Link
-                      href='/dashboard/properties/new'
-                      onClick={() => setProfileOpen(false)}
-                      className='flex items-center gap-2 px-4 py-3 text-sm hover:bg-zinc-800 transition border-t border-zinc-800'
-                    >
-                      <span>🏠</span> List your property
-                    </Link>
-                  )}
                   <Link
                     href='/api/auth/logout'
                     className='flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-zinc-800 transition border-t border-zinc-800'

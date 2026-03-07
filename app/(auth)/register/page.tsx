@@ -4,8 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+type Role = 'manager' | 'tenant';
+
 export default function RegisterPage() {
   const router = useRouter();
+  const [role, setRole] = useState<Role>('manager');
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -24,7 +27,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, role }),
       });
 
       const data = await res.json();
@@ -42,33 +45,6 @@ export default function RegisterPage() {
     }
   };
 
-  const fields = [
-    {
-      key: 'name',
-      label: 'Full Name',
-      type: 'text',
-      placeholder: 'John Santos',
-    },
-    {
-      key: 'organizationName',
-      label: 'Organization Name',
-      type: 'text',
-      placeholder: 'Santos Properties',
-    },
-    {
-      key: 'email',
-      label: 'Email',
-      type: 'email',
-      placeholder: 'you@example.com',
-    },
-    {
-      key: 'password',
-      label: 'Password',
-      type: 'password',
-      placeholder: '••••••••',
-    },
-  ] as const;
-
   return (
     <div className='min-h-screen bg-zinc-950 flex items-center justify-center px-4'>
       <div className='w-full max-w-sm'>
@@ -77,29 +53,101 @@ export default function RegisterPage() {
           <h1 className='text-3xl font-bold text-white tracking-tight'>
             RentStack
           </h1>
-          <p className='text-zinc-500 text-sm mt-2'>
-            Create your landlord account
-          </p>
+          <p className='text-zinc-500 text-sm mt-2'>Create your account</p>
         </div>
 
         {/* Card */}
         <div className='bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl'>
+          {/* Role Toggle */}
+          <div className='flex rounded-lg overflow-hidden border border-zinc-700 mb-6'>
+            <button
+              type='button'
+              onClick={() => setRole('manager')}
+              className={`flex-1 py-2.5 text-sm font-medium transition ${
+                role === 'manager'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
+              }`}
+            >
+              I&apos;m a Landlord
+            </button>
+            <button
+              type='button'
+              onClick={() => setRole('tenant')}
+              className={`flex-1 py-2.5 text-sm font-medium transition ${
+                role === 'tenant'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
+              }`}
+            >
+              I&apos;m a Tenant
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className='space-y-5'>
-            {fields.map(({ key, label, type, placeholder }) => (
-              <div key={key} className='space-y-1.5'>
+            {/* Name */}
+            <div className='space-y-1.5'>
+              <label className='text-xs font-medium text-zinc-400 uppercase tracking-widest'>
+                Full Name
+              </label>
+              <input
+                type='text'
+                required
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder='John Santos'
+                className='w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-4 py-2.5 text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition'
+              />
+            </div>
+
+            {/* Organization Name — managers only */}
+            {role === 'manager' && (
+              <div className='space-y-1.5'>
                 <label className='text-xs font-medium text-zinc-400 uppercase tracking-widest'>
-                  {label}
+                  Organization Name
                 </label>
                 <input
-                  type={type}
+                  type='text'
                   required
-                  value={form[key]}
-                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                  placeholder={placeholder}
+                  value={form.organizationName}
+                  onChange={(e) =>
+                    setForm({ ...form, organizationName: e.target.value })
+                  }
+                  placeholder='Santos Properties'
                   className='w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-4 py-2.5 text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition'
                 />
               </div>
-            ))}
+            )}
+
+            {/* Email */}
+            <div className='space-y-1.5'>
+              <label className='text-xs font-medium text-zinc-400 uppercase tracking-widest'>
+                Email
+              </label>
+              <input
+                type='email'
+                required
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder='you@example.com'
+                className='w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-4 py-2.5 text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition'
+              />
+            </div>
+
+            {/* Password */}
+            <div className='space-y-1.5'>
+              <label className='text-xs font-medium text-zinc-400 uppercase tracking-widest'>
+                Password
+              </label>
+              <input
+                type='password'
+                required
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                placeholder='••••••••'
+                className='w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-4 py-2.5 text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition'
+              />
+            </div>
 
             {error && (
               <p className='text-red-400 text-sm bg-red-950/40 border border-red-900 rounded-lg px-3 py-2'>
