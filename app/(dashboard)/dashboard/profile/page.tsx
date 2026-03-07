@@ -1,4 +1,4 @@
-// app/dashboard/profile/page.tsx
+// app/(dashboard)/dashboard/profile/page.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/db/prisma';

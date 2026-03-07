@@ -1,4 +1,3 @@
-// app/dashboard/page.tsx
 import { cookies } from 'next/headers';
 import { prisma } from '@/db/prisma';
 import { verifyToken } from '@/lib/auth';
@@ -29,6 +28,7 @@ async function getCurrentUser() {
         email: true,
         avatar_url: true,
         role: true,
+        saved_units: { select: { unit_id: true } }, // ← fetch saved units
       },
     });
   } catch {
@@ -41,11 +41,17 @@ export default async function DashboardPage() {
     getAvailableUnits(),
     getCurrentUser(),
   ]);
+
   const units = rawUnits.map((u) => ({
     ...u,
     rent_amount: Number(u.rent_amount),
   }));
-  return <DashboardClient units={units} user={user} />;
+
+  const savedUnitIds = user?.saved_units.map((s) => s.unit_id) ?? [];
+
+  return (
+    <DashboardClient units={units} user={user} savedUnitIds={savedUnitIds} />
+  );
 }
 
 export const metadata = { title: 'Dashboard' };
