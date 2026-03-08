@@ -117,7 +117,7 @@ export default function NewPropertyClient() {
           images,
         });
         setSuccess(true);
-        setTimeout(() => router.push('/dashboard'), 2000);
+        setTimeout(() => router.push('/dashboard/properties'), 2000);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Something went wrong');
       }
@@ -161,35 +161,6 @@ export default function NewPropertyClient() {
 
   return (
     <div className='min-h-screen bg-zinc-950 text-white'>
-      <nav className='border-b border-zinc-800 px-6 py-4 sticky top-0 z-40 bg-zinc-950/90 backdrop-blur'>
-        <div className='max-w-3xl mx-auto flex items-center justify-between'>
-          <div className='flex items-center gap-3'>
-            <Link
-              href='/dashboard'
-              className='text-zinc-400 hover:text-white transition flex items-center gap-1.5 text-sm'
-            >
-              <svg
-                className='w-4 h-4'
-                fill='none'
-                viewBox='0 0 24 24'
-                stroke='currentColor'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M15 19l-7-7 7-7'
-                />
-              </svg>
-              Back
-            </Link>
-            <span className='text-zinc-700'>/</span>
-            <span className='text-xl font-bold tracking-tight'>RentStack</span>
-          </div>
-          <span className='text-zinc-500 text-sm'>List your property</span>
-        </div>
-      </nav>
-
       <div className='max-w-3xl mx-auto px-6 py-12'>
         <div className='mb-10'>
           <p className='text-indigo-400 text-sm font-medium tracking-widest uppercase mb-2'>

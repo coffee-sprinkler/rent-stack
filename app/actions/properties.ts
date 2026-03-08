@@ -1,5 +1,6 @@
 'use server';
 
+import { getSession } from '@/lib/session';
 import { prisma } from '@/db/prisma';
 import { PropertyType } from '@prisma/client';
 
@@ -34,8 +35,12 @@ export async function createProperty({
   unit: UnitInput;
   images?: ImageInput[];
 }) {
+  const session = await getSession();
+  if (!session?.organizationId) throw new Error('Unauthorized');
+
   const newProperty = await prisma.property.create({
     data: {
+      organization_id: session.organizationId,
       name: property.name.trim(),
       province: property.province || null,
       city: property.city || null,

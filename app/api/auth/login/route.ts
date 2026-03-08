@@ -20,7 +20,12 @@ export async function POST(req: NextRequest) {
         { status: 401 },
       );
 
-    const token = signToken({ userId: user.id, role: user.role });
+    const token = signToken({
+      userId: user.id,
+      role: user.role,
+      organizationId: user.organization_id ?? undefined,
+      name: user.name,
+    });
     await setSession(token);
 
     return NextResponse.json({
