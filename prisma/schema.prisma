@@ -102,6 +102,7 @@ model User {
 
   assigned_requests MaintenanceRequest[] @relation("AssignedTo")
   saved_units       SavedUnit[]
+  applications   LeaseApplication[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -118,6 +119,18 @@ model SavedUnit {
   saved_at DateTime @default(now())
 
   @@unique([user_id, unit_id])
+}
+
+model LeaseApplication {
+  id          String   @id @default(cuid())
+  unit_id     String
+  user_id     String
+  message     String?
+  status      String   @default("pending") // pending | approved | rejected
+  created_at  DateTime @default(now())
+
+  unit        Unit     @relation(fields: [unit_id], references: [id])
+  user        User     @relation(fields: [user_id], references: [id])
 }
 
 model Subscription {
@@ -162,6 +175,7 @@ model Unit {
   rent_amount Decimal    @db.Decimal(10, 2)
   status      UnitStatus @default(available)
 
+  applications   LeaseApplication[]
   images               UnitImage[]
   leases               Lease[]
   maintenance_requests MaintenanceRequest[]

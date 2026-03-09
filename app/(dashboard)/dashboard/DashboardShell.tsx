@@ -13,6 +13,7 @@ type Props = {
 
 const NAV_ITEMS = [
   { label: 'Overview', href: '/dashboard', exact: true, icon: '▦' },
+  { label: 'Applications', href: '/dashboard/applications', icon: '📬' },
   { label: 'Properties', href: '/dashboard/properties', icon: '🏢' },
   { label: 'Units', href: '/dashboard/units', icon: '🚪' },
   { label: 'Tenants', href: '/dashboard/tenants', icon: '👥' },
@@ -50,7 +51,7 @@ export default function DashboardShell({
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-60 bg-zinc-900 border-r border-zinc-800 flex flex-col transition-transform duration-200 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static lg:z-auto`}
+        } lg:translate-x-0 lg:static lg:z-auto lg:h-screen lg:sticky lg:top-0`}
       >
         {/* Brand */}
         <div className='px-6 py-5 border-b border-zinc-800'>
@@ -93,6 +94,12 @@ export default function DashboardShell({
               <p className='text-xs text-zinc-500 capitalize'>{userRole}</p>
             </div>
           </div>
+          <Link
+            href='/dashboard/profile'
+            className='mt-3 w-full text-xs text-zinc-500 hover:text-white transition flex items-center gap-1.5'
+          >
+            👤 My Profile
+          </Link>
           <Link
             href='/api/auth/logout'
             className='mt-3 w-full text-xs text-zinc-500 hover:text-red-400 transition flex items-center gap-1.5'
