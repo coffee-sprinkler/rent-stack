@@ -14,7 +14,18 @@ async function main() {
     data: { name: 'Demo Properties' },
   });
 
-  // Admin user
+  // Landlord (manager)
+  await prisma.user.create({
+    data: {
+      name: 'Juan dela Cruz',
+      email: 'landlord@demo.com',
+      password: await bcrypt.hash('password123', 12),
+      role: 'manager',
+      organization_id: org.id,
+    },
+  });
+
+  // Admin
   await prisma.user.create({
     data: {
       name: 'Admin User',
@@ -25,11 +36,31 @@ async function main() {
     },
   });
 
+  // Tenant users (no org)
+  const tenantUsers = [
+    { name: 'Maria Santos', email: 'maria@demo.com' },
+    { name: 'Pedro Reyes', email: 'pedro@demo.com' },
+    { name: 'Ana Garcia', email: 'ana@demo.com' },
+  ];
+
+  for (const t of tenantUsers) {
+    await prisma.user.create({
+      data: {
+        ...t,
+        password: await bcrypt.hash('password123', 12),
+        role: 'tenant',
+      },
+    });
+  }
+
   // Property
   const property = await prisma.property.create({
     data: {
       name: 'Sunset Residences',
-      address: '123 Sunset Blvd, Manila',
+      province: 'Metro Manila',
+      city: 'Manila',
+      barangay: 'Ermita',
+      street: '123 Sunset Blvd',
       property_type: 'apartment',
       organization_id: org.id,
     },
@@ -87,7 +118,12 @@ async function main() {
     });
   }
 
-  console.log('✅ Seed complete — admin@demo.com / password123');
+  console.log('✅ Seed complete');
+  console.log('   landlord@demo.com / password123  (manager)');
+  console.log('   admin@demo.com    / password123  (admin)');
+  console.log('   maria@demo.com    / password123  (tenant)');
+  console.log('   pedro@demo.com    / password123  (tenant)');
+  console.log('   ana@demo.com      / password123  (tenant)');
 }
 
 main()

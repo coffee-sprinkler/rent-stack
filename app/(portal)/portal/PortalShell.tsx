@@ -42,7 +42,7 @@ export default function PortalShell({ userName, children }: Props) {
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-60 bg-zinc-900 border-r border-zinc-800 flex flex-col transition-transform duration-200 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static lg:z-auto`}
+        } lg:translate-x-0 lg:static lg:z-auto lg:h-screen lg:sticky lg:top-0`}
       >
         {/* Brand */}
         <div className='px-6 py-5 border-b border-zinc-800'>

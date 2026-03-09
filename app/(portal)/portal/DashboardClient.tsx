@@ -39,15 +39,6 @@ type Props = {
 
 const PROPERTY_TYPES = ['apartment', 'house', 'condo'];
 
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 function SaveButton({
   unitId,
   initialSaved,
@@ -147,82 +138,6 @@ export default function DashboardClient({
 
   return (
     <div className='min-h-screen bg-zinc-950 text-white'>
-      {/* Nav */}
-      <nav className='border-b border-zinc-800 px-6 py-4 sticky top-0 z-40 bg-zinc-950/90 backdrop-blur'>
-        <div className='max-w-7xl mx-auto flex items-center justify-between'>
-          <span className='text-xl font-bold tracking-tight'>RentStack</span>
-
-          <div className='flex items-center gap-4'>
-            {hasListings && (
-              <Link
-                href='/dashboard/properties/new'
-                className='text-sm bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition'
-              >
-                + Add listing
-              </Link>
-            )}
-
-            <div className='relative'>
-              <button
-                onClick={() => setProfileOpen((o) => !o)}
-                className='flex items-center gap-2 hover:opacity-80 transition'
-              >
-                {user?.avatar_url ? (
-                  <Image
-                    src={user.avatar_url}
-                    alt={user.name}
-                    width={36}
-                    height={36}
-                    className='rounded-full object-cover border border-zinc-700'
-                  />
-                ) : (
-                  <div className='w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold'>
-                    {user ? getInitials(user.name) : '?'}
-                  </div>
-                )}
-                <div className='text-left hidden sm:block'>
-                  <p className='text-sm font-medium leading-tight'>
-                    {user?.name ?? 'User'}
-                  </p>
-                  <p className='text-xs text-zinc-500'>{user?.role}</p>
-                </div>
-                <svg
-                  className='w-4 h-4 text-zinc-500'
-                  fill='none'
-                  viewBox='0 0 24 24'
-                  stroke='currentColor'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M19 9l-7 7-7-7'
-                  />
-                </svg>
-              </button>
-
-              {profileOpen && (
-                <div className='absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden'>
-                  <Link
-                    href='/portal/profile'
-                    onClick={() => setProfileOpen(false)}
-                    className='flex items-center gap-2 px-4 py-3 text-sm hover:bg-zinc-800 transition'
-                  >
-                    <span>👤</span> My Profile
-                  </Link>
-                  <Link
-                    href='/api/auth/logout'
-                    className='flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-zinc-800 transition border-t border-zinc-800'
-                  >
-                    <span>↩</span> Sign out
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero */}
       <section className='max-w-7xl mx-auto px-6 py-14 text-center'>
         <p className='text-indigo-400 text-sm font-medium tracking-widest uppercase mb-3'>
@@ -365,7 +280,7 @@ export default function DashboardClient({
             {filtered.map((unit) => (
               <Link
                 key={unit.id}
-                href={`/dashboard/units/${unit.id}`}
+                href={`/portal/units/${unit.id}`}
                 className='bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-600 transition group block'
               >
                 {/* Image */}
