@@ -1,7 +1,9 @@
+// app/(portal)/portal/layout.tsx
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import PortalShell from './PortalShell';
 
-export default async function DashboardLayout({
+export default async function PortalLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -10,5 +12,7 @@ export default async function DashboardLayout({
   if (!session) redirect('/login');
   if (session.role !== 'tenant') redirect('/dashboard');
 
-  return <>{children}</>;
+  return (
+    <PortalShell userName={session.name ?? 'Tenant'}>{children}</PortalShell>
+  );
 }
