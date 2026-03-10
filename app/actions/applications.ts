@@ -2,12 +2,27 @@
 // app/actions/applications.ts
 import { prisma } from '@/db/prisma';
 import { getSession } from '@/lib/session';
+import {
+  sendApplicationReceivedEmail,
+  sendApplicationStatusEmail,
+} from '@/lib/email';
 
 export async function applyForUnit(unitId: string, message: string) {
   const session = await getSession();
   if (!session) throw new Error('Unauthorized');
 
-  const unit = await prisma.unit.findUnique({ where: { id: unitId } });
+  const unit = await prisma.unit.findUnique({
+    where: { id: unitId },
+    include: {
+      property: {
+        include: {
+          organization: {
+            include: { users: { where: { role: 'manager' }, take: 1 } },
+          },
+        },
+      },
+    },
+  });
   if (!unit || unit.status !== 'available')
     throw new Error('Unit is not available');
 
@@ -17,13 +32,31 @@ export async function applyForUnit(unitId: string, message: string) {
   if (existing)
     throw new Error('You already have a pending application for this unit');
 
-  return prisma.leaseApplication.create({
+  const applicant = await prisma.user.findUnique({
+    where: { id: session.userId },
+  });
+  if (!applicant) throw new Error('User not found');
+
+  const application = await prisma.leaseApplication.create({
     data: {
       unit_id: unitId,
       user_id: session.userId,
       message: message.trim() || null,
     },
   });
+
+  // Notify landlord
+  const landlord = unit.property.organization?.users[0];
+  if (landlord) {
+    await sendApplicationReceivedEmail(
+      landlord.email,
+      applicant.name,
+      unit.unit_number,
+      unit.property.name,
+    ).catch(console.error);
+  }
+
+  return application;
 }
 
 export async function approveApplication(applicationId: string) {
@@ -38,7 +71,6 @@ export async function approveApplication(applicationId: string) {
   if (application.unit.property.organization_id !== session.organizationId)
     throw new Error('Unauthorized');
 
-  // Find or create tenant record from user
   let tenant = await prisma.tenant.findFirst({
     where: { email: application.user.email },
   });
@@ -58,7 +90,6 @@ export async function approveApplication(applicationId: string) {
   const endDate = new Date(today);
   endDate.setFullYear(endDate.getFullYear() + 1);
 
-  // Create lease
   const lease = await prisma.lease.create({
     data: {
       unit_id: application.unit_id,
@@ -71,7 +102,6 @@ export async function approveApplication(applicationId: string) {
     },
   });
 
-  // Generate monthly payment records for the lease period
   const payments: {
     lease_id: string;
     amount: number;
@@ -80,33 +110,26 @@ export async function approveApplication(applicationId: string) {
   }[] = [];
   const current = new Date(today);
   current.setDate(1);
-  current.setMonth(current.getMonth() + 1); // start from next month
-
+  current.setMonth(current.getMonth() + 1);
   while (current <= endDate) {
     payments.push({
       lease_id: lease.id,
       amount: Number(application.unit.rent_amount),
       due_date: new Date(current),
-      status: 'pending' as const,
+      status: 'pending',
     });
     current.setMonth(current.getMonth() + 1);
   }
-
   await prisma.payment.createMany({ data: payments });
 
-  // Mark unit occupied
   await prisma.unit.update({
     where: { id: application.unit_id },
     data: { status: 'occupied' },
   });
-
-  // Approve this application
   await prisma.leaseApplication.update({
     where: { id: applicationId },
     data: { status: 'approved' },
   });
-
-  // Reject all other pending applications for same unit
   await prisma.leaseApplication.updateMany({
     where: {
       unit_id: application.unit_id,
@@ -115,6 +138,15 @@ export async function approveApplication(applicationId: string) {
     },
     data: { status: 'rejected' },
   });
+
+  // Notify tenant
+  await sendApplicationStatusEmail(
+    application.user.email,
+    application.user.name,
+    'approved',
+    application.unit.unit_number,
+    application.unit.property.name,
+  ).catch(console.error);
 }
 
 export async function rejectApplication(applicationId: string) {
@@ -123,14 +155,23 @@ export async function rejectApplication(applicationId: string) {
 
   const application = await prisma.leaseApplication.findUnique({
     where: { id: applicationId },
-    include: { unit: { include: { property: true } } },
+    include: { unit: { include: { property: true } }, user: true },
   });
   if (!application) throw new Error('Application not found');
   if (application.unit.property.organization_id !== session.organizationId)
     throw new Error('Unauthorized');
 
-  return prisma.leaseApplication.update({
+  await prisma.leaseApplication.update({
     where: { id: applicationId },
     data: { status: 'rejected' },
   });
+
+  // Notify tenant
+  await sendApplicationStatusEmail(
+    application.user.email,
+    application.user.name,
+    'rejected',
+    application.unit.unit_number,
+    application.unit.property.name,
+  ).catch(console.error);
 }

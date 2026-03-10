@@ -1,0 +1,15 @@
+name: Rent Due Reminders
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # Daily at 8AM UTC
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger rent reminders
+        run: |
+          curl -f -X GET "${{ secrets.APP_URL }}/api/cron/rent-reminders?secret=${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json"

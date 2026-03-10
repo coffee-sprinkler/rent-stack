@@ -104,6 +104,10 @@ model User {
   saved_units       SavedUnit[]
   applications   LeaseApplication[]
 
+  email_verified     Boolean  @default(false)
+  verify_token       String?
+  verify_token_exp   DateTime?
+
   payment_methods PaymentMethod[]
 
   created_at DateTime @default(now())
