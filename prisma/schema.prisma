@@ -104,6 +104,8 @@ model User {
   saved_units       SavedUnit[]
   applications   LeaseApplication[]
 
+  payment_methods PaymentMethod[]
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
@@ -194,6 +196,15 @@ model UnitImage {
   created_at DateTime @default(now())
 }
 
+model PaymentMethod {
+  id          String   @id @default(cuid())
+  user_id     String
+  user        User     @relation(fields: [user_id], references: [id])
+  label       String   // e.g. "GCash", "Maya"
+  qr_code_url String
+  created_at  DateTime @default(now())
+}
+
 model Tenant {
   id              String       @id @default(cuid())
   organization_id String
@@ -253,6 +264,7 @@ model MaintenanceRequest {
 
   assigned_to String?
   assignee    User?   @relation("AssignedTo", fields: [assigned_to], references: [id])
+  created_at  DateTime @default(now())
 }
 
 model Expense {
