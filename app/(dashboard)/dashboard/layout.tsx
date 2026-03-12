@@ -20,7 +20,11 @@ export default async function DashboardLayout({
   });
 
   return (
-    <DashboardShell userName={session.name ?? 'User'} userRole={session.role}>
+    <DashboardShell
+      userName={session.name ?? ''}
+      userRole={session.role}
+      isOrgAdmin={session.isOrgAdmin}
+    >
       {!user?.email_verified && <UnverifiedBanner />}
       {children}
     </DashboardShell>

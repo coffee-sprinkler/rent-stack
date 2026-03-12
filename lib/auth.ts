@@ -12,6 +12,8 @@ export function signToken(payload: {
   role: string;
   organizationId?: string;
   name?: string;
+  email: string;
+  isOrgAdmin?: boolean;
 }) {
   const options: SignOptions = {
     expiresIn: (process.env.JWT_EXPIRES_IN ?? '7d') as SignOptions['expiresIn'],
@@ -25,4 +27,6 @@ export const verifyToken = (token: string) =>
     role: string;
     organizationId?: string;
     name?: string;
+    email: string;
+    isOrgAdmin?: boolean;
   };

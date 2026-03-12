@@ -6,6 +6,9 @@ export async function GET() {
   const cookieStore = await cookies();
   cookieStore.delete('token');
   return NextResponse.redirect(
-    new URL('/', process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
+    new URL(
+      '/login',
+      process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
+    ),
   );
 }

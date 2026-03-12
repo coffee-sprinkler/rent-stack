@@ -63,6 +63,16 @@ enum MaintenanceStatus {
   resolved
 }
 
+enum MemberRole {
+  admin
+  manager
+}
+
+enum InviteStatus {
+  pending
+  accepted
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model Organization {
@@ -70,13 +80,38 @@ model Organization {
   name    String
   plan_id String?
 
+  logo_url String?
+  address  String?
+  phone    String?
+  email    String?
+  website  String?
+
   users         User[]
+  members       OrganizationMember[]
   subscriptions Subscription[]
   properties    Property[]
   tenants       Tenant[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organization_id String
+  user_id        String?
+  role           MemberRole   @default(manager)
+  invite_status  InviteStatus @default(pending)
+  invite_token   String?      @unique
+  invited_email  String
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([organization_id, invited_email])
 }
 
 model User {
@@ -86,11 +121,9 @@ model User {
   password String
   role     Role   @default(tenant)
 
-  // Renter profile fields (optional)
   avatar_url String?
   phone      String?
 
-  // Rental preferences
   pref_min_budget    Decimal?      @db.Decimal(10, 2)
   pref_max_budget    Decimal?      @db.Decimal(10, 2)
   pref_location      String?
@@ -100,15 +133,16 @@ model User {
   organization_id String?
   organization    Organization? @relation(fields: [organization_id], references: [id])
 
+  org_memberships   OrganizationMember[]
+  is_org_admin Boolean @default(false)
   assigned_requests MaintenanceRequest[] @relation("AssignedTo")
   saved_units       SavedUnit[]
-  applications   LeaseApplication[]
+  applications      LeaseApplication[]
+  payment_methods   PaymentMethod[]
 
-  email_verified     Boolean  @default(false)
-  verify_token       String?
-  verify_token_exp   DateTime?
-
-  payment_methods PaymentMethod[]
+  email_verified   Boolean   @default(false)
+  verify_token     String?
+  verify_token_exp DateTime?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -128,15 +162,16 @@ model SavedUnit {
 }
 
 model LeaseApplication {
-  id          String   @id @default(cuid())
-  unit_id     String
-  user_id     String
-  message     String?
-  status      String   @default("pending") // pending | approved | rejected
-  created_at  DateTime @default(now())
+  id      String  @id @default(cuid())
+  unit_id String
+  user_id String
+  message String?
+  status  String  @default("pending") // pending | approved | rejected
 
-  unit        Unit     @relation(fields: [unit_id], references: [id])
-  user        User     @relation(fields: [user_id], references: [id])
+  unit Unit @relation(fields: [unit_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
+
+  created_at DateTime @default(now())
 }
 
 model Subscription {
@@ -152,15 +187,15 @@ model Subscription {
 }
 
 model Property {
-  id              String       @id @default(cuid())
+  id              String        @id @default(cuid())
   organization_id String?
   organization    Organization? @relation(fields: [organization_id], references: [id])
 
   name          String
-  province        String?
-  city            String?
-  barangay        String?
-  street          String?
+  province      String?
+  city          String?
+  barangay      String?
+  street        String?
   property_type PropertyType
 
   units    Unit[]
@@ -181,7 +216,7 @@ model Unit {
   rent_amount Decimal    @db.Decimal(10, 2)
   status      UnitStatus @default(available)
 
-  applications   LeaseApplication[]
+  applications         LeaseApplication[]
   images               UnitImage[]
   leases               Lease[]
   maintenance_requests MaintenanceRequest[]
@@ -201,12 +236,13 @@ model UnitImage {
 }
 
 model PaymentMethod {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   user_id     String
-  user        User     @relation(fields: [user_id], references: [id])
-  label       String   // e.g. "GCash", "Maya"
+  user        User   @relation(fields: [user_id], references: [id])
+  label       String
   qr_code_url String
-  created_at  DateTime @default(now())
+
+  created_at DateTime @default(now())
 }
 
 model Tenant {
@@ -268,7 +304,8 @@ model MaintenanceRequest {
 
   assigned_to String?
   assignee    User?   @relation("AssignedTo", fields: [assigned_to], references: [id])
-  created_at  DateTime @default(now())
+
+  created_at DateTime @default(now())
 }
 
 model Expense {

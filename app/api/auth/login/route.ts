@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
       role: user.role,
       organizationId: user.organization_id ?? undefined,
       name: user.name,
+      email: user.email,
+      isOrgAdmin: user.is_org_admin,
     });
     await setSession(token);
 
