@@ -7,6 +7,7 @@ import Link from 'next/link';
 export default async function ExpensesPage() {
   const session = await getSession();
   if (!session?.organizationId) redirect('/login');
+  console.log('session:', JSON.stringify(session));
 
   const expenses = await prisma.expense.findMany({
     where: { property: { organization_id: session.organizationId } },

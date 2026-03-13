@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
               email,
               password: await hashPassword(password),
               role: 'manager',
+              is_org_admin: true,
               verify_token: verifyToken,
               verify_token_exp: verifyTokenExp,
             },
@@ -73,6 +74,7 @@ export async function POST(req: NextRequest) {
       role: user.role,
       organizationId: user.organization_id ?? undefined,
       name: user.name,
+      email: user.email,
     });
     await setSession(token);
 

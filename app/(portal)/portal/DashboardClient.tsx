@@ -35,6 +35,7 @@ type Props = {
   units: Unit[];
   user: User;
   savedUnitIds?: string[];
+  hasListings?: boolean;
 };
 
 const PROPERTY_TYPES = ['apartment', 'house', 'condo'];
@@ -97,6 +98,7 @@ export default function DashboardClient({
   units,
   user,
   savedUnitIds = [],
+  hasListings = false,
 }: Props) {
   const [search, setSearch] = useState('');
   const [priceMin, setPriceMin] = useState('');
@@ -105,7 +107,6 @@ export default function DashboardClient({
   const [bathrooms, setBathrooms] = useState('');
   const [propertyType, setPropertyType] = useState('');
   const [floor, setFloor] = useState('');
-  const [profileOpen, setProfileOpen] = useState(false);
 
   const filtered = useMemo(() => {
     return units.filter((u) => {
@@ -133,8 +134,6 @@ export default function DashboardClient({
     propertyType,
     floor,
   ]);
-
-  const hasListings = false;
 
   return (
     <div className='min-h-screen bg-zinc-950 text-white'>
