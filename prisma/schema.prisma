@@ -42,7 +42,8 @@ enum UnitStatus {
 
 enum LeaseStatus {
   active
-  ended
+  expired
+  terminated
 }
 
 enum PaymentStatus {
@@ -261,18 +262,24 @@ model Tenant {
 }
 
 model Lease {
-  id        String @id @default(cuid())
-  tenant_id String
-  tenant    Tenant @relation(fields: [tenant_id], references: [id])
-
-  unit_id String
-  unit    Unit   @relation(fields: [unit_id], references: [id])
-
+  id             String      @id @default(cuid())
+  tenant_id      String
+  tenant         Tenant      @relation(fields: [tenant_id], references: [id])
+  unit_id        String
+  unit           Unit        @relation(fields: [unit_id], references: [id])
   start_date     DateTime
   end_date       DateTime
   monthly_rent   Decimal     @db.Decimal(10, 2)
   deposit_amount Decimal     @db.Decimal(10, 2)
   status         LeaseStatus @default(active)
+
+  // New fields
+  terminated_at      DateTime?
+  termination_reason String?
+  document_url       String?
+  renewed_from_id    String?
+  renewed_from       Lease?  @relation("LeaseRenewals", fields: [renewed_from_id], references: [id], onDelete: SetNull)
+  renewals           Lease[] @relation("LeaseRenewals")
 
   payments Payment[]
 }
