@@ -24,7 +24,8 @@ enum PlanName {
 
 enum SubscriptionStatus {
   active
-  trial
+  pending
+  expired
   cancelled
 }
 
